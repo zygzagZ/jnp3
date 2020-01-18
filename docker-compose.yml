@@ -1,0 +1,26 @@
+version: "3.3"
+services:
+  neo4j:
+    build: neo4j
+    hostname: neo4j
+    environment:
+      NEO4J_AUTH: neo4j/test
+    ports:
+      - 7687:7687
+      - 7474:7474
+
+  app:
+    build: ./app
+    hostname: app
+    depends_on:
+      - neo4j
+    links:
+      - neo4j
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    environment:
+      WAIT_HOSTS: neo4j:7687
+      NEO4J_PASSWORD: test
