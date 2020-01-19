@@ -1,11 +1,13 @@
-FROM python:3.7-alpine
+FROM python:3.7-alpine as builder
 WORKDIR /app
-ENV FLASK_APP movies.py
-ENV FLASK_RUN_HOST 0.0.0.0
-# RUN apk add --no-cache gcc musl-dev linux-headers
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
 RUN chmod +x /wait
 COPY . .
-CMD ["sh", "-c", "/wait && python movies.py"]
+
+FROM builder as app
+CMD ["sh", "-c", "/wait && python -u movies.py"]
+
+FROM builder as worker
+CMD ["sh", "-c", "/wait && rq worker -u redis://redis:6379"]

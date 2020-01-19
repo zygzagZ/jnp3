@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.4"
 services:
   neo4j:
     build: neo4j
@@ -10,16 +10,36 @@ services:
       - 7474:7474
 
   app:
-    build: ./app
+    build:
+      context: ./app
+      target: app
+
     hostname: app
     depends_on:
       - neo4j
+      - redis
     links:
       - neo4j
+      - redis
     expose:
       - 8080
     environment:
-      WAIT_HOSTS: neo4j:7687
+      WAIT_HOSTS: neo4j:7687, redis:6379
+      NEO4J_PASSWORD: test
+
+  worker:
+    build:
+      context: app
+      target: worker
+
+    depends_on:
+      - redis
+      - app
+    links:
+      - redis
+      - neo4j
+    environment:
+      WAIT_HOSTS: neo4j:7687, redis:6379
       NEO4J_PASSWORD: test
 
   nginx:
@@ -30,3 +50,10 @@ services:
       - app
     ports:
       - 8080:80
+
+
+  redis:
+    image: "redis:alpine"
+    hostname: redis
+    expose:
+      - 6379
