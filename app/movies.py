@@ -3,6 +3,7 @@ import os
 from json import dumps
 from flask import Flask, g, Response, request
 from flask_caching import Cache
+import background
 
 from neo4j.v1 import GraphDatabase, basic_auth
 
@@ -120,25 +121,14 @@ def get_count():
 	db = get_db()
 	results = db.run("MATCH (n:MovieCount) RETURN n")
 	result = results.single()
-	count = int(result.get("count", -1))
+	count = int(result[0].get("count", -1))
 	return Response(dumps({"count": count}), mimetype="application/json")
 
 
 @app.route("/schedule_count")
 def schedule_count():
-	q.enqueue(count_all_movies)
+	q.enqueue(background.count_all_movies)
 	return Response(dumps({"status": "ok"}), mimetype="application/json")
-
-
-
-def count_all_movies():
-	db = get_db()
-	results = db.run("MATCH (movie:Movie) RETURN COUNT(movie)")
-	result = results.single()
-	count = int(result.get("COUNT(movie)", -1))
-	print(db.run("MATCH (n:MovieCount) DELETE n"))
-	print(db.run("CREATE (n:MovieCount {count: " + str(count) + " })"))
-	return count
 
 
 if __name__ == '__main__':
