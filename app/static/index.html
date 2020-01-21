@@ -32,6 +32,10 @@
                 <div class="navbar-brand">
                     <div class="brand">Neo4j Movies</div>
                 </div>
+                <div>
+                    Total movies: <div class="movies-count">?</div>
+                    	 <button class="movies-update">update!</button>
+                </div>
             </div>
         </div>
     </div>
@@ -112,6 +116,10 @@
         $("#search").submit(search);
         search();
     })
+     $(".movies-update").click(function() { fetch('/schedule_count').then((r)=>console.log(r)); })
+     setInterval(function() {
+     	fetch('/count').then((r)=>r.json()).then((c)=>$('.movies-count').text(c.count));
+	 }, 5000);
 </script>
 
 <script type="text/javascript">
